@@ -404,7 +404,7 @@
   </div>
 
 
-
+  
   <script>
     const books = [
       {
@@ -2164,7 +2164,51 @@
       }
     ];
 
-    applyFilters() {
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const searchEl = document.getElementById('search');
+    const categoryEl = document.getElementById('category');
+    const sortEl = document.getElementById('sort');
+    const chipEls = document.querySelectorAll('.chip');
+    let activeTag = 'all';
+
+    function badge(text, cls = '') {
+      return `<span class="badge ${cls}">${text}</span>`;
+    }
+
+    function renderCard(book) {
+      const badges = [
+        ...book.category.map(c => badge(c)),
+        ...book.tags.map(t => badge(t)),
+        ...book.awards.map(a => badge(a, 'award'))
+      ].join('');
+
+      return `
+        <article class="card">
+          <div class="cover-wrap">
+            <img class="cover" src="${book.cover}" alt="Cover von ${book.title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="cover-fallback" style="display:none">${book.title}</div>
+          </div>
+          <div class="card-body">
+            <div class="card-top">
+              <div>
+                <h3 class="title">${book.title}</h3>
+                <p class="author">${book.author} · ${book.year}</p>
+              </div>
+              <div class="rank">#${book.rank}</div>
+            </div>
+            <div class="badges">${badges}</div>
+            <p class="desc">${book.desc}</p>
+            <p class="why">${book.why}</p>
+            <div class="meta">
+              <div class="meta-row">${book.vibe}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function applyFilters() {
       const q = searchEl.value.trim().toLowerCase();
       const cat = categoryEl.value;
       const sort = sortEl.value;
@@ -2199,7 +2243,6 @@
     });
 
     applyFilters();
-  
   </script>
 </body>
 </html>
