@@ -867,7 +867,7 @@
       empty.style.display = 'block';
       empty.textContent = message;
       recoSummary.textContent = 'Die Buchdaten konnten gerade nicht geladen werden.';
-      recoResults.innerHTML = '';
+      recoResults.innerHTML = '<p style=\'color:var(--muted);font-size:.9rem;padding:.5rem 0\'>Ladefehler — bitte Seite neu laden.</p>';
     }
 
     async function init() {
@@ -883,5 +883,6 @@
 
     init();
   </script>
+<div style="margin-top:12px;text-align:right"><span id="build-ver" style="font-size:.72rem;color:var(--muted);opacity:.6">Build v2026-04-24-2239</span></div>
 </body>
 </html>
