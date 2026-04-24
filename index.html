@@ -127,6 +127,93 @@
       gap: 8px;
       margin: 10px 0 0;
     }
+    .recommender {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 1.2rem;
+      display: grid;
+      gap: 1rem;
+    }
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.9rem;
+    }
+    .quiz-grid label {
+      display: grid;
+      gap: 0.45rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .quiz-grid select {
+      width: 100%;
+    }
+    .reco-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .primary-btn,
+    .ghost-btn {
+      border-radius: 999px;
+      padding: 0.85rem 1.1rem;
+      font: inherit;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+    .primary-btn {
+      background: var(--accent);
+      color: #08111f;
+      border: none;
+      font-weight: 700;
+    }
+    .primary-btn:hover { transform: translateY(-1px); }
+    .ghost-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .ghost-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .reco-summary {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .reco-results {
+      display: grid;
+      gap: 0.9rem;
+    }
+    .reco-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1rem 1.1rem;
+      background: rgba(255,255,255,0.025);
+    }
+    .reco-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.15rem;
+    }
+    .reco-title-row h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .mini-rank {
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+    .reco-author,
+    .reco-why,
+    .reco-desc {
+      margin: 0.35rem 0 0;
+    }
+    .reco-author { color: var(--muted); }
     .chip {
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -338,6 +425,56 @@
             wann das Buch besonders gut passt.
           </p>
         </div>
+      </div>
+    </section>
+
+    <section class="section recommender-section">
+      <div class="section-head">
+        <div>
+          <h2>Nächstes Buch finden</h2>
+          <p>Nicht nur filtern — sondern eine brauchbare Empfehlung für genau die Art Sci‑Fi, auf die du gerade Lust hast.</p>
+        </div>
+      </div>
+      <div class="recommender" aria-label="Empfehlungsfinder">
+        <div class="quiz-grid">
+          <label>
+            <span>Ich will gerade eher …</span>
+            <select id="moodSelect">
+              <option value="accessible">leicht reinkommen / zugänglich</option>
+              <option value="mindfuck">etwas, das mir das Hirn verdreht</option>
+              <option value="epic">epische Weite / großes Universum</option>
+              <option value="politisch">politische / gesellschaftliche Sci‑Fi</option>
+              <option value="ai">KI / Maschinen / Bewusstsein</option>
+              <option value="new">eher neuere Bücher</option>
+            </select>
+          </label>
+          <label>
+            <span>Ton / Stil</span>
+            <select id="styleSelect">
+              <option value="any">egal</option>
+              <option value="modern">modern</option>
+              <option value="classic">klassisch</option>
+              <option value="literarisch">literarisch / philosophisch</option>
+              <option value="hard-sf">hard-sf / ideenlastig</option>
+              <option value="space-opera">space opera</option>
+            </select>
+          </label>
+          <label>
+            <span>Einstiegshürde</span>
+            <select id="entrySelect">
+              <option value="any">egal</option>
+              <option value="easy">möglichst leicht</option>
+              <option value="medium">mittel</option>
+              <option value="hard">ruhig anspruchsvoll</option>
+            </select>
+          </label>
+        </div>
+        <div class="reco-actions">
+          <button id="recommendBtn" class="primary-btn" type="button">Empfiehl mir 3 Bücher</button>
+          <button id="surpriseBtn" class="ghost-btn" type="button">Überrasch mich</button>
+        </div>
+        <div id="recoSummary" class="reco-summary"></div>
+        <div id="recoResults" class="reco-results"></div>
       </div>
     </section>
 
@@ -2170,10 +2307,86 @@
     const categoryEl = document.getElementById('category');
     const sortEl = document.getElementById('sort');
     const chipEls = document.querySelectorAll('.chip');
+    const moodSelect = document.getElementById('moodSelect');
+    const styleSelect = document.getElementById('styleSelect');
+    const entrySelect = document.getElementById('entrySelect');
+    const recommendBtn = document.getElementById('recommendBtn');
+    const surpriseBtn = document.getElementById('surpriseBtn');
+    const recoSummary = document.getElementById('recoSummary');
+    const recoResults = document.getElementById('recoResults');
     let activeTag = 'all';
 
     function badge(text, cls = '') {
       return `<span class="badge ${cls}">${text}</span>`;
+    }
+
+    function getEntryLevel(book) {
+      if (book.tags.includes('accessible')) return 'easy';
+      if (book.tags.includes('mindfuck') || book.category.includes('literarisch')) return 'hard';
+      return 'medium';
+    }
+
+    function scoreBook(book, mood, style, entry) {
+      let score = Math.max(0, 180 - book.rank);
+      if (mood !== 'any') {
+        if (book.tags.includes(mood)) score += 80;
+        if (book.category.includes(mood)) score += 60;
+      }
+      if (style !== 'any') {
+        if (book.category.includes(style)) score += 70;
+        if (style === 'modern' && book.year >= 2000) score += 20;
+        if (style === 'classic' && book.year < 2000) score += 20;
+      }
+      const level = getEntryLevel(book);
+      if (entry !== 'any') {
+        if (level === entry) score += 55;
+        if (entry === 'easy' && level === 'medium') score += 15;
+        if (entry === 'hard' && level === 'medium') score += 15;
+      }
+      if (mood === 'new' && book.year >= 2020) score += 20;
+      if (mood === 'accessible' && book.year >= 2000) score += 10;
+      return score;
+    }
+
+    function explainPick(book, mood, style, entry) {
+      const reasons = [];
+      if (mood !== 'any' && (book.tags.includes(mood) || book.category.includes(mood))) reasons.push(`passt stark zu „${mood}"`);
+      if (style !== 'any' && (book.category.includes(style) || (style === 'modern' && book.year >= 2000) || (style === 'classic' && book.year < 2000))) reasons.push(`trifft den gewünschten Stil`);
+      if (entry !== 'any' && getEntryLevel(book) === entry) reasons.push(`passt zur Einstiegshürde`);
+      if (!reasons.length) reasons.push('ist insgesamt eine sehr starke Allround-Empfehlung');
+      return reasons[0].charAt(0).toUpperCase() + reasons[0].slice(1) + '.';
+    }
+
+    function renderRecoCard(book, mood, style, entry) {
+      return `
+        <article class="reco-card">
+          <div>
+            <div class="reco-title-row">
+              <h3>${book.title}</h3>
+              <span class="mini-rank">#${book.rank}</span>
+            </div>
+            <p class="reco-author">${book.author} · ${book.year}</p>
+            <p class="reco-why"><strong>Warum jetzt:</strong> ${explainPick(book, mood, style, entry)}</p>
+            <p class="reco-desc">${book.desc}</p>
+          </div>
+        </article>
+      `;
+    }
+
+    function runRecommendation({ surprise = false } = {}) {
+      const mood = surprise ? 'any' : moodSelect.value;
+      const style = surprise ? 'any' : styleSelect.value;
+      const entry = surprise ? 'any' : entrySelect.value;
+      const ranked = [...books]
+        .map(book => ({ book, score: scoreBook(book, mood, style, entry) + (surprise ? Math.random() * 40 : 0) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(item => item.book);
+
+      recoSummary.innerHTML = surprise
+        ? 'Drei starke Wildcards aus der Liste — quer durch Stimmung, Stil und Einstieg.'
+        : `Für <strong>${moodSelect.options[moodSelect.selectedIndex].text}</strong>, Stil <strong>${styleSelect.options[styleSelect.selectedIndex].text}</strong> und Einstieg <strong>${entrySelect.options[entrySelect.selectedIndex].text}</strong> würde ich damit anfangen:`;
+      recoResults.innerHTML = ranked.map(book => renderRecoCard(book, mood, style, entry)).join('');
     }
 
     function renderCard(book) {
@@ -2242,7 +2455,11 @@
       });
     });
 
+    recommendBtn.addEventListener('click', () => runRecommendation());
+    surpriseBtn.addEventListener('click', () => runRecommendation({ surprise: true }));
+
     applyFilters();
+    runRecommendation();
   </script>
 </body>
 </html>
