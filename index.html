@@ -397,6 +397,94 @@
       .topline { grid-template-columns: 1fr; }
       .toolbar { grid-template-columns: 1fr; }
     }
+    .recommender {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 1.2rem;
+      display: grid;
+      gap: 1rem;
+      margin-top: 12px;
+    }
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .9rem;
+    }
+    .quiz-grid label {
+      display: grid;
+      gap: .45rem;
+      font-size: .95rem;
+      color: var(--muted);
+    }
+    .quiz-grid select {
+      width: 100%;
+    }
+    .reco-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+    }
+    .primary-btn,
+    .ghost-btn {
+      border-radius: 999px;
+      padding: .85rem 1.1rem;
+      font: inherit;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+    .primary-btn {
+      background: var(--accent);
+      color: #08111f;
+      border: none;
+      font-weight: 700;
+    }
+    .primary-btn:hover { transform: translateY(-1px); }
+    .ghost-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .ghost-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .reco-summary {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .reco-results {
+      display: grid;
+      gap: .9rem;
+    }
+    .reco-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1rem 1.1rem;
+      background: rgba(255,255,255,.025);
+    }
+    .reco-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .15rem;
+    }
+    .reco-title-row h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .mini-rank {
+      color: var(--muted);
+      font-size: .9rem;
+      white-space: nowrap;
+    }
+    .reco-author,
+    .reco-why,
+    .reco-desc {
+      margin: .35rem 0 0;
+    }
+    .reco-author { color: var(--muted); }
   </style>
 </head>
 <body>
